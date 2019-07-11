@@ -12,6 +12,27 @@ def gaussian_kernel( size, sigma ):
     g		= np.exp( -0.5/float(sigma**2)*(x**2+y**2) )
     return g / g.sum()
 
+def convolve_and_object_mask_creation ( img_file = 'Image.jpg' ):
+    from sklearn.decomposition import PCA
+    # SIMPLE AND NAIVE ALGORITHM FOR DECOMPOSING IMAGE INFORMATION
+    img   = mpimg.imread( img_file )
+    n,m,k = np.shape(img)
+    flat_img = img[:,:,0] * 0.0
+    vec_img = []
+    for i in range ( k ) :
+        lin_img = img[:,:,i].reshape(-1)
+        frac_img = lin_img.reshape(n,m)
+        flat_img = flat_img + frac_img
+        vec_img.append( lin_img )
+    vec_img = np.array( vec_img )
+    ca = PCA(1)
+    ca .fit(vec_img)
+    binary_image = ca.components_[0].reshape(n,m) > np.mean(ca.components_[0]) + 0.*np.std(ca.components_[0])
+    size = 20 ; dsp_img = flat_img
+    dsp_img = sg.convolve( ca.components_[0].reshape(n,m) , gaussian_kernel(size,10) - gaussian_kernel(size,5) )
+    return(dsp_img,binary_image)
+
+
 def gaussian_bfact ( size, bfact ):
     x, y	= np.mgrid[-size:size, -size:size] #:size+1
     g		= np.exp( -float(bfact)*(x**2+y**2) )
